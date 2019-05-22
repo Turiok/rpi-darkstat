@@ -9,9 +9,9 @@
 groupadd -r -g $DS_GID darkstat  && useradd --no-log-init -u $DS_UID -g darkstat darkstat
 
 # Set permissions on database and log directory
-mkdir -p /config
-chown -R darkstat:darkstat /config
-chmod 755 -R /config
+mkdir -p /darkstat/config/
+chown -R darkstat:darkstat /darkstat/config/
+chmod 755 -R /darkstat/config/
 
 # TODO Mieux gérer les options
-/usr/local/sbin/darkstat --no-daemon --chroot /config/ --user darkstat $OPTIONS
+/darkstat/sbin/darkstat --no-daemon --chroot /darkstat/config/ --user darkstat $OPTIONS

@@ -1,6 +1,6 @@
 # Builds a docker image for a darkstat
-FROM arm32v7/debian:stable-slim
-MAINTAINER Didier C <crd.compte@gmail.com>
+FROM arm32v7/debian:stable-slim as builder
+
 
 COPY qemu-arm-static /usr/bin/
 
@@ -11,6 +11,7 @@ COPY qemu-arm-static /usr/bin/
 ENV DEBIAN_FRONTEND noninteractive
 ENV HOME="/root" LC_ALL="C.UTF-8" LANG="en_US.UTF-8" LANGUAGE="en_US.UTF-8"
 
+WORKDIR /
 ###############################################
 ##   INSTALL ENVIRONMENT                     ##
 ###############################################
@@ -22,28 +23,56 @@ RUN echo '# Debian Stretch, mises à jour "volatiles" + paquets non libres' > /e
     && echo 'deb http://deb.debian.org/debian stable main contrib non-free' >> /etc/apt/sources.list \
     && apt-get update && apt-get install -y zlib1g-dev \
         libpcap-dev git autoconf \
-        build-essential vim-common \
-    && rm -rf /var/lib/apt/lists/* /var/cache/* /var/tmp/*
+        build-essential vim-common
 
 #########################################
 ##             COMPILATION             ##
 #########################################
 
-RUN git clone https://www.unix4lyfe.org/git/darkstat /tmp/darkstat \
-    && cd /tmp/darkstat \
+RUN git clone https://www.unix4lyfe.org/git/darkstat \
+    && cd /darkstat \
+    && mkdir build \
     && autoconf \
     && autoheader \
-    && ./configure \
+    && ./configure --prefix=$PWD/build/ \
     && make \
-    && make install \
-    && cd \
-    && rm -rf /tmp/darkstat
+    && make install
 
-VOLUME ["/config"]
+###############################################
+###############################################
+##   PRODUCTION                              ##
+###############################################
 
+FROM arm32v7/debian:stable-slim as production
+MAINTAINER Didier C <crd.compte@gmail.com>
+
+###############################################
+##           ENVIRONMENTAL CONFIG            ##
+###############################################
+# Set correct environment variables
+ENV DEBIAN_FRONTEND noninteractive
+ENV HOME="/root" LC_ALL="C.UTF-8" LANG="en_US.UTF-8" LANGUAGE="en_US.UTF-8"
+
+WORKDIR /
+
+###############################################
+##   INSTALL ENVIRONMENT                     ##
+###############################################
+# Add these repositories for following deb installation.
+RUN echo '# Debian Stretch, mises à jour "volatiles" + paquets non libres' > /etc/apt/sources.list \  
+	&& echo 'deb http://deb.debian.org/debian/ stable-updates main contrib non-free' >> /etc/apt/sources.list \
+	&& echo '# Debian Stable, mises à jour "volatiles" + paquets non libres' >> /etc/apt/sources.list \
+    && echo 'deb http://deb.debian.org/debian stable main contrib non-free' >> /etc/apt/sources.list \
+    && apt-get update && apt-get install -y libpcap0.8 \
+    && rm -rf /var/lib/apt/lists/* /var/cache/* /var/tmp/*
+
+COPY --from=0 /darkstat/build darkstat
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
 
+
+VOLUME ["/darkstat/config"]
+EXPOSE 667
 CMD ["/run.sh"]
 
 
