@@ -1,7 +1,6 @@
 # Builds a docker image for a darkstat
 FROM arm32v7/debian:stable-slim as builder
 
-
 COPY qemu-arm-static /usr/bin/
 
 ###############################################
@@ -45,6 +44,8 @@ RUN git clone https://www.unix4lyfe.org/git/darkstat \
 
 FROM arm32v7/debian:stable-slim as production
 MAINTAINER Didier C <crd.compte@gmail.com>
+
+COPY qemu-arm-static /usr/bin/
 
 ###############################################
 ##           ENVIRONMENTAL CONFIG            ##
