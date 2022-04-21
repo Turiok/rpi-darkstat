@@ -1,3 +1,7 @@
+# DEPRECATED 
+
+New image here [docker-darkstat](https://hub.docker.com/r/didierc/docker-darkstat) and code here : [Gitlab](https://gitlab.com/Turiok/docker-darkstat)
+
 Darkstat
 ==========================
 
